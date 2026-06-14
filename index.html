@@ -76,7 +76,7 @@
             max-width: 500px;
             width: 100%;
             transition: all 0.5s ease;
-            z-index: 2; /* Sits above the falling hearts */
+            z-index: 2;
         }
 
         .success-card-style {
@@ -176,14 +176,48 @@
             opacity: 1;
             left: auto;
         }
+
+        /* Floating Audio Toggle Button */
+        .music-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 200;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .music-toggle:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
 
+    <audio id="bg-music" loop preload="auto">
+        <source src="Bgm.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="music-btn" class="music-toggle">🎵</div>
+
     <div class="hearts-container" id="hearts-container"></div>
 
     <div id="proposal-card" class="container">
-        <h1>Will you forever be mine? <br> doctree 💕</h1>
+        <h1>Will you forever be mine? <br> prarthana 💕</h1>
         <p class="names">From: suhas 💌</p>
         
         <div class="btn-container">
@@ -213,6 +247,9 @@
         const banner = document.getElementById('banner');
         const body = document.body;
         const heartsContainer = document.getElementById('hearts-container');
+        
+        const bgMusic = document.getElementById('bg-music');
+        const musicBtn = document.getElementById('music-btn');
 
         const funnyMessages = [
             "Lmao ok, try again 😂",
@@ -221,33 +258,56 @@
             "That's so funny haha. Now say yes. 🙄"
         ];
 
+        // Function to start music safely upon initial interaction
+        function startMusic() {
+            bgMusic.play().then(() => {
+                musicBtn.innerText = "🎵";
+                // Remove initial interaction triggers once playing successfully
+                document.removeEventListener('click', startMusic);
+                document.removeEventListener('touchstart', startMusic);
+            }).catch(err => console.log("Audio waiting for absolute user interaction focus"));
+        }
+
+        // Add auto-trigger event listeners for mobile devices/desktops
+        document.addEventListener('click', startMusic);
+        document.addEventListener('touchstart', startMusic);
+
+        // Manual play/pause control button logic
+        musicBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevents triggering startMusic loop again
+            if (bgMusic.paused) {
+                bgMusic.play();
+                musicBtn.innerText = "🎵";
+            } else {
+                bgMusic.pause();
+                musicBtn.innerText = "🔇";
+            }
+        });
+
         // Function to dynamically generate falling hearts background
         function createFallingHeart() {
             const heart = document.createElement('div');
             heart.classList.add('falling-heart');
             
-            // Randomly use different shades of light pink and white hearts
             const heartTypes = ['❤️', '💖', '💝', '💕', '🤍'];
             heart.innerText = heartTypes[Math.floor(Math.random() * heartTypes.length)];
             
-            // Randomize starting horizontal position, size, and drop speeds
             heart.style.left = Math.random() * 100 + 'vw';
-            heart.style.animationDuration = Math.random() * 3 + 3 + 's'; // Between 3s and 6s
-            heart.style.fontSize = Math.random() * 15 + 12 + 'px'; // Between 12px and 27px
+            heart.style.animationDuration = Math.random() * 3 + 3 + 's'; 
+            heart.style.fontSize = Math.random() * 15 + 12 + 'px'; 
             
             heartsContainer.appendChild(heart);
 
-            // Clean up hearts after they hit the bottom floor
             setTimeout(() => {
                 heart.remove();
             }, 6000);
         }
 
-        // Keep generating fresh hearts continuously
         setInterval(createFallingHeart, 300);
 
         function moveButton(e) {
             if(e.type === 'touchstart') e.preventDefault();
+            startMusic(); // Fallback trigger execution
 
             const padding = 40;
             const maxX = window.innerWidth - noBtn.offsetWidth - padding;
@@ -282,6 +342,7 @@
         });
 
         yesBtn.addEventListener('click', () => {
+            startMusic(); // Fallback trigger execution
             proposalCard.classList.add('hidden');
             successCard.classList.remove('hidden');
             banner.classList.remove('show-center');
@@ -291,7 +352,7 @@
             const videoEl = document.querySelector('.success-video');
             if(videoEl) {
                 videoEl.load();
-                videoEl.play().catch(error => console.log("Playback started smoothly"));
+                videoEl.play().catch(error => console.log("Video track playing"));
             }
         });
     </script>
